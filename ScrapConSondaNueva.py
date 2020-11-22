@@ -28,8 +28,23 @@ from nube import texto2els
 import sys
 from store import store
 id_grupo_telegram = ""
+def actualizar_tema(grupo_telegram, tema):
+    temas = " "
+    idchat = grupo_telegram
+    # return string
+    temas = temas.join(tema)
+    try:
+        #enviar_noticias(["----------------\n"
+                         #"--" + grupo_telegram +
+                         #"\n *El término de búsqueda ahora es:* \n"+ temas +""
+                         #"\n-------------"])
+        requests.post('https://api.telegram.org/' + token + "/sendMessage",
+                      data={'chat_id': idchat, 'text': '\n [ *El término de búsqueda ahora es:* ]\n' + temas})
+        return tema
+    except Exception as e:
+        return "-1"
 def corresponde_procesar_id(k, terminacion_id):
-    if k[-1] == terminacion_id:
+    if k[-2:] == terminacion_id:
         return True
     else:
         return False
@@ -204,7 +219,7 @@ class RSSParser(object):
         else:
 
             urlCortada = replaceURL(url)
-        LINKS = open("./LINKS/" + urlCortada + ".csv", "a", encoding='utf-8')
+        #LINKS = open("./LINKS/" + urlCortada + ".csv", "a", encoding='utf-8')
 
         try:
             headers = {
@@ -215,13 +230,14 @@ class RSSParser(object):
             print("Error 1 - Obtener Response ", e)
         fila = 0
         try:
-            LINKS.write('----------LINK-----------' + '\n' + str(url) + '\n')
+            #LINKS.write('----------LINK-----------' + '\n' + str(url) + '\n')
             for Noti in confiTagPage["j"]["BuscarNoticia"]:
                 try:
+                    print(Noti)
                     Noticias = eval(Noti)
                     fila += 1
                     if Noticias != []:
-                        LINKS.write('----------EVALUADOR-----------:' + '\n' + str(Noti) + '\n')
+                        #LINKS.write('----------EVALUADOR-----------:' + '\n' + str(Noti) + '\n')
                         for i, Noticiae in enumerate(Noticias):
                             texto = filtroReplace(Noticiae.get_text())
                             print(texto)
@@ -230,9 +246,9 @@ class RSSParser(object):
                                 LIIINKS = [a['href'] for a in Noticiae.find_all('a', href=True)]
                                 # LIIINKS = ', '+'\n'.join(LIIINKS)
                                 print(LIIINKS)
-                                LINKS.write(
-                                    '----------HTML-----------:' + '\n' + str(filtroReplace(Noticiae.text)) + '\n')
-                                LINKS.write('----------LINK-----------:' + '\n' + str(LIIINKS) + '\n')
+                                #LINKS.write(
+                                    #'----------HTML-----------:' + '\n' + str(filtroReplace(Noticiae.text)) + '\n')
+                                #LINKS.write('----------LINK-----------:' + '\n' + str(LIIINKS) + '\n')
                 except Exception as e:
 
                     print("Error 2 - Obtener Articulos de noticias ", e)
@@ -263,16 +279,16 @@ class RSSParser(object):
                         if len(SetDeLinks) == 1 and list(SetDeLinks)[0] != url:
                             temp9 = list(SetDeLinks)
                             temp9 = str(temp9[0])
-                            LINKS.write('----------LINK-----------' + '\n' + str(
-                                unidecode(temp9)) + '\n' + '----------HTML-----------:' + '\n' + unidecode(
-                                str(texto)) + '\n')
+                            #LINKS.write('----------LINK-----------' + '\n' + str(
+                                #unidecode(temp9)) + '\n' + '----------HTML-----------:' + '\n' + unidecode(
+                                #str(texto)) + '\n')
                         else:
                             if resultado != {}:
                                 if resultado[maximo] >= 2:
                                     temp9 = maximo
-                                    LINKS.write('----------LINK-----------' + '\n' + str(unidecode(
-                                        temp9)) + '\n' + '----------HTML-----------:' + '\n' + unidecode(str(
-                                        texto)) + '\n')
+                                    #LINKS.write('----------LINK-----------' + '\n' + str(unidecode(
+                                        #temp9)) + '\n' + '----------HTML-----------:' + '\n' + unidecode(str(
+                                        #texto)) + '\n')
                                 else:
                                     palabras = texto.split()
                                     palabras.append(tema)
@@ -286,7 +302,7 @@ class RSSParser(object):
                                                                   redSocial in l.lower()])
                                                 if not totalRedes >= 1:
                                                     temp9 = l
-                                                    LINKS.write(unidecode(temp9) + '\n')
+                                                    #LINKS.write(unidecode(temp9) + '\n')
 
                                     except Exception as e:
                                         print(" ERROR 5 - NO ESCRAPEO NADA ", e)
@@ -322,74 +338,82 @@ class RSSParser(object):
                     j_i = {"link": url2 + temp9,
                            "desc": texto,
                            "tmpItems": i}
-                    try:
-                        if not filtro_repetida(j_i):
+                    LinkNotcia = ""
+
+                    if not filtro_repetida(j_i):
+                        LinkNotcia = j_i["link"]
+                        """
                             archivoCSV = []
-                            LinkNotcia = j_i["link"]
+                            
                             DescripcionNoticia = ""
                             fechaPublicacion = ""
                             response2 = requests.get(LinkNotcia, headers=headers).text
                             Titulo = []
-                            for Titu in confiTagPage["j"]["tituloNoticia"]:
-                                try:
-                                    Titulos = eval(Titu)
-                                    if Titulos != []:
-                                        Titulo.append(Titulos)
-                                except Exception as e:
-                                    print(e)
-                            resultadoTitulo = contarElementosLista(Titulo)
-                            if resultadoTitulo != {}:
-                                maximoTitulo = max(resultadoTitulo, key=resultadoTitulo.get)
-                                # hoja.cell(row=row, column=6).value = maximoTitulo
-                                print("El valor mas repetido es el ", maximoTitulo, " con ",
-                                      resultadoTitulo[maximoTitulo], " veces")
-
-                            Descripcion = []
-                            for Descr in confiTagPage["j"]["descripcionNoticia"]:
-                                try:
-                                    Descripciones = eval(Descr)
-                                    if Descripciones != []:
-                                        Descripcion.append(Descripciones)
-                                except Exception as e:
-                                    print(e)
-                            resultadoDescripcion = contarElementosLista(Descripcion)
-                            if resultadoDescripcion != {}:
-                                maximoDescripcion = max(resultadoDescripcion, key=resultadoDescripcion.get)
-                                # hoja.cell(row=row, column=7).value = maximoDescripcion
-                                print("El valor mas repetido es el ", maximoDescripcion, " con ",
-                                      resultadoDescripcion[maximoDescripcion], " veces")
-
+                            try:
+                                for Titu in confiTagPage["j"]["tituloNoticia"]:
+                                    try:
+                                        Titulos = eval(Titu)
+                                        if Titulos != []:
+                                            Titulo.append(Titulos)
+                                    except Exception as e:
+                                        print(" No se obtuvo el Titulo", e,Titu)
+                                resultadoTitulo = contarElementosLista(Titulo)
+                                if resultadoTitulo != {}:
+                                    maximoTitulo = max(resultadoTitulo, key=resultadoTitulo.get)
+                                    print("El valor mas repetido es el ", maximoTitulo, " con ", resultadoTitulo[maximoTitulo], " veces")
+                            except Exception as e:
+                                print("No se pudo obtener el titulo")
+                                Titulo = "No se pudo obtener el titulo"
+                            try:
+                                Descripcion = []
+                                for Descr in confiTagPage["j"]["descripcionNoticia"]:
+                                    try:
+                                        Descripciones = eval(Descr)
+                                        if Descripciones != []:
+                                            Descripcion.append(Descripciones)
+                                    except Exception as e:
+                                        print("No se obtuvo la Descripcion", e, Descr)
+                                resultadoDescripcion = contarElementosLista(Descripcion)
+                                if resultadoDescripcion != {}:
+                                    maximoDescripcion = max(resultadoDescripcion, key=resultadoDescripcion.get)
+                                    print("El valor mas repetido es el ", maximoDescripcion, " con ", resultadoDescripcion[maximoDescripcion], " veces")
+                            except Exception as e:
+                                print("No se pudo obtener la descripcion")
+                                Descripcion = "No se pudo obtener la descripcion"
                             link_web = url
                             FechaHoraScrapeo = str(datetime.datetime.now())
                             archivoCSV.append(link_web + ',\n' + ',\n' + LinkNotcia + ',\n' + FechaHoraScrapeo)
+
 
                             with open("out.csv", "a") as f:
                                 wr = csv.writer(f, delimiter="\n")
                                 for ele in items:
                                     wr.writerow([ele + ","])
+
                     except Exception as e:
                         print(" ERROR AL OBTENER TITULO O DESCRIPCION", e)
+                        """
+                        items.append(LinkNotcia)
 
-                    items.append(LinkNotcia)
 
                     ### store the
-                    # texto2els(texto, FechaHoraScrapeo, LinkNotcia)
+                    #texto2els(texto, FechaHoraScrapeo, LinkNotcia)
                     link = LinkNotcia
 
                     # resto 5 horas porque es la diferencia horario que tengo con Alemania
                     aive_dt = datetime.datetime.now() - - datetime.timedelta(hours=5)
                     fecha = aive_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                    titulo = maximoTitulo
+                    #titulo = maximoTitulo
                     # stract portal media from notice's link
                     medio = link2medio(link)
                     grupo = grupo_telegram_fijo
 
-                    store.store(titulo, fecha, texto, link, medio, grupo)
+                    #store.store(titulo, fecha, texto, link, medio, grupo)
 
                     #########################################################################
 
-            LINKS.close()
+            #LINKS.close()
             # hojaExcelDeErrores.save('./Excel/errores' + urlCortada + '-Errores.xlsx')
             return items
         except Exception as e:
@@ -505,26 +529,48 @@ def procesar_id(k):
     id_grupo_telegram = k
     tema = valor_sonda[1]
     provincias = valor_sonda[2]
-    json_donde_estan_los_portales = formar_json_portales(provincias)
+    #json_donde_estan_los_portales = formar_json_portales(provincias)
     j = open("./configGenerico.json", "r")
     configuracion()
     confiTagPage = {}
     confiTagPage = json.loads(j.read())
-    for url in json_donde_estan_los_portales:
+    for prov in provincias:
+        json_donde_estan_los_portales = carga_portales(prov)
         if json_donde_estan_los_portales != "":
-            # print( "********************************" )
-            print("TEMA:\n\n", tema)
-            # print( "********************************" )
-            print(" Procesando la url:  ", url)
-            r = RSSParser().parse(confiTagPage, url, tema)
-            if r != []:
-                enviar_noticias(r,id_telegram,nombre_grupo,provincias,tema)
+            verifico_cambios_en_la_sonda()
+            for k in datos_sonda:
+                if k == id_grupo_telegram:
+                    valor_sonda = datos_sonda[k]
+                    if valor_sonda[1] != tema:
+                        actualizar_tema(k, valor_sonda[1])
+                        tema = valor_sonda[1]
+            for portales in json_donde_estan_los_portales.values():
+                for url in portales:
+                    requests.post('https://api.telegram.org/' + token + "/sendMessage",
+                                  data={'chat_id': id_telegram, 'text': '\n [ *Buscando en la Provincia: *]\n' + prov +
+                                                                   '\n [ *El portal de noticias: *]\n' + url})
+                    # print( "********************************" )
+                    print("TEMA:\n\n", tema)
+                    # print( "********************************" )
+                    print(" Procesando la url:  ", url)
+                    r = RSSParser().parse(confiTagPage, url, tema)
+                    if r != []:
+                        enviar_noticias(r,id_telegram,nombre_grupo,provincias,tema)
+                    else:
+                        enviar_noticias2(prov, url,tema,id_telegram)
     """
     acá va el programa tal cual está en el main original ahora
     
     """
 
 datos_sonda ={}
+def enviar_noticias2(prov, url,tema,id_telegram):
+    temas = " "
+    temas = temas.join(tema)
+    requests.post('https://api.telegram.org/' + token + "/sendMessage",
+                  data={'chat_id': id_telegram, 'text': '\n [ *En la Provincia: ' + prov + ']' 
+                        '\n [ *El portal de noticias: ' + url + ']\n' 
+                        '\n [ *No obtuvo resultados con el/los tema/s  ' + temas + " buscado"']\n'})
 def verifico_cambios_en_la_sonda():
     # traigo los datos de las sonda
 
@@ -554,7 +600,6 @@ if __name__ == '__main__':
     while True:
 
         verifico_cambios_en_la_sonda()
-
         for k in datos_sonda:
             if corresponde_procesar_id(k, terminacion_id):
                 procesar_id(k)
