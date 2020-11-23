@@ -123,7 +123,6 @@ def load_persist(elem):
             return pickle.load(archivo)
     except Exception as e:
         print("269 - Except load_persit ", e)
-
 def replaceBase(texto):
     texto = texto.replace("http:", " ").replace("//", " ").replace(".", " ").replace("www", " ").replace(
             "https:", " ").replace("/", " ").replace("\n", " ").replace("-", " ")
@@ -519,7 +518,6 @@ def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,Temas):
                     print(requests.status_codes)
     except Exception as e:
         print(" 279 - enviar ", e)
-
 def procesar_id(k):
     # obtengo el valor de la sonda para el k
     valor_sonda = datos_sonda[k]
