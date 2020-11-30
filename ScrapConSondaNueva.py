@@ -43,6 +43,21 @@ def actualizar_tema(grupo_telegram, tema):
         return tema
     except Exception as e:
         return "-1"
+def actualizar_provincia(grupo_telegram, provincias):
+    MuchasProvincias = " "
+    idchat = grupo_telegram
+    # return string
+    MuchasProvincias = MuchasProvincias.join(provincias)
+    try:
+        #enviar_noticias(["----------------\n"
+                         #"--" + grupo_telegram +
+                         #"\n *El término de búsqueda ahora es:* \n"+ temas +""
+                         #"\n-------------"])
+        requests.post('https://api.telegram.org/' + token + "/sendMessage",
+                      data={'chat_id': idchat, 'text': '\n [ *La/las Pronvicia/as a buscar es/son:* ]\n' + MuchasProvincias})
+        return MuchasProvincias
+    except Exception as e:
+        return "-1"
 def corresponde_procesar_id(k, terminacion_id):
     if k[-2:] == terminacion_id:
         return True
@@ -174,8 +189,18 @@ def filtro_tema(j_i, tema):
     return r
 def filtro_tema2(texto, tema):
     # c1 = tema.upper() in texto.upper()
+    NuevosTemas = []
+    for t in tema:
+        t1 = t + "."
+        t2 = t + " "
+        t3 = t + "!"
+        t4 = t + ":"
+        t5 = [t1, t2, t3, t4]
+        NuevosTemas.extend(t5)
+    if "***" in tema:
+        NuevosTemas.append("")
     r = False
-    for j in tema:
+    for j in NuevosTemas:
         if j.upper() in texto.upper():
             r = True
         #c1 = c1 or c2
@@ -232,14 +257,14 @@ class RSSParser(object):
             #LINKS.write('----------LINK-----------' + '\n' + str(url) + '\n')
             for Noti in confiTagPage["j"]["BuscarNoticia"]:
                 try:
-                    print(Noti)
+                    #print(Noti)
                     Noticias = eval(Noti)
                     fila += 1
                     if Noticias != []:
                         #LINKS.write('----------EVALUADOR-----------:' + '\n' + str(Noti) + '\n')
                         for i, Noticiae in enumerate(Noticias):
                             texto = filtroReplace(Noticiae.get_text())
-                            print(texto)
+                            #print(texto)
                             if filtro_tema2(texto, tema) and texto != '':
                                 Noticia.append(Noticiae)
                                 LIIINKS = [a['href'] for a in Noticiae.find_all('a', href=True)]
@@ -490,7 +515,7 @@ def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,Temas):
         url_api = token + "/sendMessage"
 
         # print( "- tema \n", Tema, " \n ",  NombreGrupo )
-        men_t = "✔ Noticias referidas al tema %s, enviadas al grupo de télegram %s: " % (Temas, Nombre_Grupo) + "\n"
+        men_t = "Ultima Noticia: %s, enviadas al grupo de télegram %s: " % (Temas, Nombre_Grupo) + "\n"
         ta = False
         # recorro el arreglo de links y lo imprimos
         men = []
@@ -518,16 +543,34 @@ def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,Temas):
                     print(requests.status_codes)
     except Exception as e:
         print(" 279 - enviar ", e)
+
+def funcion_verificadora(tema, provincias):
+    verifico_cambios_en_la_sonda()
+    for k in datos_sonda:
+        if k == id_grupo_telegram:
+            valor_sonda = datos_sonda[k]
+            if valor_sonda[1] != tema:
+                actualizar_tema(k, valor_sonda[1])
+                tema = valor_sonda[1]
+            if valor_sonda[2] != provincias:
+                prov = valor_sonda[2]
+                json_donde_estan_los_portales = formar_json_portales(prov)
+                portales =[]
+                portales.append(json_donde_estan_los_portales)
+                provincias = []
+                provincias.append(valor_sonda[2])
 def procesar_id(k):
-    # obtengo el valor de la sonda para el k
     valor_sonda = datos_sonda[k]
     id_telegram = k
     nombre_grupo = valor_sonda[0]
     global id_grupo_telegram
+    global portales
+    portales = []
+    global provincias
+    provincias = []
     id_grupo_telegram = k
     tema = valor_sonda[1]
     provincias = valor_sonda[2]
-    #json_donde_estan_los_portales = formar_json_portales(provincias)
     j = open("./configGenerico.json", "r")
     configuracion()
     confiTagPage = {}
@@ -535,27 +578,38 @@ def procesar_id(k):
     for prov in provincias:
         json_donde_estan_los_portales = carga_portales(prov)
         if json_donde_estan_los_portales != "":
-            verifico_cambios_en_la_sonda()
-            for k in datos_sonda:
-                if k == id_grupo_telegram:
-                    valor_sonda = datos_sonda[k]
-                    if valor_sonda[1] != tema:
-                        actualizar_tema(k, valor_sonda[1])
-                        tema = valor_sonda[1]
-            for portales in json_donde_estan_los_portales.values():
-                for url in portales:
-                    requests.post('https://api.telegram.org/' + token + "/sendMessage",
-                                  data={'chat_id': id_telegram, 'text': '\n [ *Buscando en la Provincia: *]\n' + prov +
-                                                                   '\n [ *El portal de noticias: *]\n' + url})
-                    # print( "********************************" )
-                    print("TEMA:\n\n", tema)
-                    # print( "********************************" )
-                    print(" Procesando la url:  ", url)
-                    r = RSSParser().parse(confiTagPage, url, tema)
-                    if r != []:
-                        enviar_noticias(r,id_telegram,nombre_grupo,provincias,tema)
+            for url in json_donde_estan_los_portales["link"]:
+                lista_temp_porales = []
+                lista_temp_provincias = []
+                verifico_cambios_en_la_sonda()
+                for k in datos_sonda:
+                    if k == id_grupo_telegram:
+                        valor_sonda = datos_sonda[k]
+                        if valor_sonda[1] != tema:
+                            actualizar_tema(k, valor_sonda[1])
+                            tema = valor_sonda[1]
+                        if valor_sonda[2] != provincias:
+                            prov = valor_sonda[2]
+                            json_donde_estan_los_portales = formar_json_portales(prov)
+                            lista_temp_porales.extend(json_donde_estan_los_portales)
+                            lista_temp_provincias.extend(valor_sonda[2])
+                            url = lista_temp_porales
+                            provincias = lista_temp_provincias
+                print("TEMA:\n\n", tema)
+                for t in tema:
+                    if t == "***":
+                        id_telegram = -370901021
                     else:
-                        enviar_noticias2(prov, url,tema,id_telegram)
+                        id_telegram = id_telegram
+
+                # print( "********************************" )
+
+                print(" Procesando la url:  ", url)
+                r = RSSParser().parse(confiTagPage, url, tema)
+                if r != []:
+                    enviar_noticias(r,id_telegram,nombre_grupo,provincias,tema)
+                #else:
+                    #enviar_noticias2(prov, url,tema,id_telegram)
     """
     acá va el programa tal cual está en el main original ahora
     
