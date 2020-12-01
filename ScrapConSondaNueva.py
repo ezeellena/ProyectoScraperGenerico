@@ -10,6 +10,7 @@ python3 scrap.py 7
 python3 scrap.py 8
 python3 scrap.py 9
 """
+import tldextract
 import hashlib
 import ast
 from jsonmerge import merge
@@ -198,6 +199,7 @@ def filtro_tema2(texto, tema):
         t5 = [t1, t2, t3, t4]
         NuevosTemas.extend(t5)
     if "***" in tema:
+        NuevosTemas = []
         NuevosTemas.append("")
     r = False
     for j in NuevosTemas:
@@ -505,6 +507,32 @@ def configuracion():
             LinksDePaginasWeb = {}
     except:
         LinksDePaginasWeb = {}
+def funcion_BuscaTitulo(linktitulo):
+    try:
+        titulo = BeautifulSoup(linktitulo, "html.parser").find("meta", {"property": "og:title"})["content"]
+        return titulo
+    except Exception as e:
+        print("No Encontro titulo ", e)
+    try:
+        titulo = BeautifulSoup(linktitulo, "html.parser").find("meta", {"name": "og:title"})["content"]
+        return titulo
+    except Exception as e:
+        print("No Encontro titulo ", e)
+    try:
+        titulo = json.loads(BeautifulSoup(linktitulo, "html.parser").find("script", {"type": 'application/ld+json'}).string)["headline"]
+        return titulo
+    except Exception as e:
+        print("No Encontro titulo ", e)
+    try:
+        titulo = json.loads(BeautifulSoup(linktitulo, "html.parser").find("script", {"type": 'application/ld+json'}).string)[0]["headline"]
+        return titulo
+    except Exception as e:
+        print("No Encontro titulo ", e)
+    try:
+        titulo = BeautifulSoup(linktitulo, "html.parser").find("title").text
+        return titulo
+    except Exception as e:
+        print("No Encontro titulo ", e)
 def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,Temas):
     if not vtelegram:
         pass
@@ -534,31 +562,27 @@ def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,Temas):
             # Si tiene información, mando el título.
             requests.post('https://api.telegram.org/' + url_api, data={'chat_id': id_chat, 'text': men_t})
             for m in men:
-
                 # todo Eze, fijate que tuve que poner esta función par que controle no mandar repetidos.
                 if not link_enviado(m):
+                    m =m.replace("\n", "").replace("- ", "")
+                    extracted = tldextract.extract(m)
+                    medio = "{}.{}".format(extracted.domain, extracted.suffix)
+                    medio = medio.replace(".com", "")
+                    linktitulo = requests.get(m).text
+                    titulo = funcion_BuscaTitulo(linktitulo)
+                    if not isinstance(titulo, str):
+                        titulo = ""
+
+
+                    mensaje = "Medio: "+medio+"\n\n"+"    Última Noticia: " + titulo + "\n\n" + "    Ver más en ->" + m
 
                     requests.post('https://api.telegram.org/' + url_api,
-                                  data={'chat_id': id_chat, 'text': '\n [' + Nombre_Grupo + ']\n' + m})
+                                  data={'chat_id': id_chat, 'text': mensaje})
                     print(requests.status_codes)
     except Exception as e:
         print(" 279 - enviar ", e)
 
-def funcion_verificadora(tema, provincias):
-    verifico_cambios_en_la_sonda()
-    for k in datos_sonda:
-        if k == id_grupo_telegram:
-            valor_sonda = datos_sonda[k]
-            if valor_sonda[1] != tema:
-                actualizar_tema(k, valor_sonda[1])
-                tema = valor_sonda[1]
-            if valor_sonda[2] != provincias:
-                prov = valor_sonda[2]
-                json_donde_estan_los_portales = formar_json_portales(prov)
-                portales =[]
-                portales.append(json_donde_estan_los_portales)
-                provincias = []
-                provincias.append(valor_sonda[2])
+
 def procesar_id(k):
     valor_sonda = datos_sonda[k]
     id_telegram = k
@@ -585,22 +609,14 @@ def procesar_id(k):
                 for k in datos_sonda:
                     if k == id_grupo_telegram:
                         valor_sonda = datos_sonda[k]
-                        if valor_sonda[1] != tema:
-                            actualizar_tema(k, valor_sonda[1])
-                            tema = valor_sonda[1]
-                        if valor_sonda[2] != provincias:
-                            prov = valor_sonda[2]
-                            json_donde_estan_los_portales = formar_json_portales(prov)
-                            lista_temp_porales.extend(json_donde_estan_los_portales)
-                            lista_temp_provincias.extend(valor_sonda[2])
-                            url = lista_temp_porales
-                            provincias = lista_temp_provincias
+                        if valor_sonda[1] != tema or valor_sonda[2] != provincias:
+                            return True
                 print("TEMA:\n\n", tema)
                 for t in tema:
                     if t == "***":
                         id_telegram = -370901021
                     else:
-                        id_telegram = id_telegram
+                        id_telegram = id_grupo_telegram
 
                 # print( "********************************" )
 
