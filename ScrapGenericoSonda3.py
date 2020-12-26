@@ -3,11 +3,15 @@ import json
 import os
 import pickle
 from datetime import date
+import time
 from urllib.parse import urlparse, urljoin
 import colorama
 import requests
 import sys
 import mysql.connector
+
+from celery import Celery
+CeleryClient = Celery('task_celery', broker='redis://default:d474210009@167.86.120.98:6379/0')
 from bs4 import BeautifulSoup
 mydb = mysql.connector.connect(
   host="167.86.120.98",
@@ -115,21 +119,16 @@ def get_all_website_links(Portal,Noticiae):
         # remove URL GET parameters, URL fragments, etc.
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
         if not is_valid(href):
-            # not a valid URL
             continue
         if href in internal_urls:
-            # already in the set
             continue
         if domain_name not in href:
-            # external link
-            if href not in external_urls:
-                print(f"{GRAY}[!] External link: {href}{RESET}")
-                external_urls.add(href)
             continue
-        print(f"{GREEN}[*] Internal link: {href}{RESET}")
+        #print(f"{GREEN}[*] Internal link: {href}{RESET}")
         urls.add(href)
         internal_urls.add(href)
     return internal_urls
+
 
 
 if __name__ == "__main__":
@@ -142,12 +141,7 @@ if __name__ == "__main__":
     GRAY = colorama.Fore.LIGHTBLACK_EX
     RESET = colorama.Fore.RESET
 
-    # initialize the set of links (unique links)
-
-    total_urls_visited = 0
     Portales = requests.get("http://167.86.120.98:6060/Portales?id_provincia="+Id_Provincia+"").json()
-    #Portales =  ["http://veranoticias.com.ar/"]
-    configuracion(Id_Provincia)
     j = open("configGenerico2.json", "r")
 
     confiTagPage = {}
@@ -155,38 +149,61 @@ if __name__ == "__main__":
     while True:
         try:
             for Portal in Portales:
+                Portal["url"] = "https://rosarionuestro.com"
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
                 response = requests.get(Portal["url"], headers=headers).text
-                #response = requests.get(Portal, headers=headers).text
-                for Noti in confiTagPage["j"]["BuscarNoticia"]:
-                    try:
-                        Noticias = eval(Noti)
+                try:
+                    mycursor = mydb.cursor()
 
-                        if Noticias != []:
-                            for i, Noticiae in enumerate(Noticias):
+                    sql = "SELECT tag FROM portales_tag where portales like "+"'%"+ Portal["url"]+"%'" + ""
+                    mycursor.execute(sql)
+                    sql = mycursor.fetchall()
+                except Exception as e:
+                    print("Error al ejecutar la consulta")
+                for Noti in sql:
+                    try:
+
+                        Noticia = eval(Noti[0])
+                        if Noticia != []:
+                            for i, Noticiae in enumerate(Noticia):
                                 links = ""
                                 CantLinks = ""
-                                links = get_all_website_links(Portal["url"],Noticiae)
+
+                                links = get_all_website_links(Portal["url"], Noticiae)
+
                                 links = list(links)
                                 CantLinks = contarElementosLista(links)
                                 CantLinks = list(CantLinks)
-                                print(CantLinks)
                                 for link in CantLinks:
-                                    if not filtro_repetida(link,Id_Provincia):
-                                        texto = filtroReplace(Noticiae.get_text())
 
-                                        medio = Portal["url"]
-                                        #medio = Portal
-                                        links = ''.join(link)
-                                        fecha = date.today()
+                                    timeinit = time.time()
+                                    texto = filtroReplace(Noticiae.get_text())
+                                    medio = Portal["url"]
+                                    fecha = date.today()
+                                    """
+                                    try:
                                         mycursor = mydb.cursor()
-                                        sql = "INSERT INTO all_noticias (fecha,titulo,link,copete,texto,medio,provincia) " \
+                                        sql = "INSERT INTO todas_las_noticias (link,fecha,titulo,copete,texto,medio,provincia) " \
                                               "VALUES (%s, %s, %s, %s, %s, %s, %s) "
-                                        val = (fecha, "", links, "", texto, medio, Id_Provincia)
+                                        val = (link, fecha, "", "", texto, medio, Id_Provincia)
                                         mycursor.execute(sql, val)
                                         mydb.commit()
+                                        print("insertó correctamente el link: " + link + "")
+                                    except Exception as e:
+                                        print("El Link ya fue guardado: " + link + "")
+                                    """
+                                    try:
 
+                                        val = (link, fecha, "", "", texto, medio, int(Id_Provincia))
+                                        CeleryClient.send_task("task_celery.InsertNoticiaMySql", [{"val": val}])
+                                    except Exception as e:
+                                        print("El Link ya fue guardado: " + link + ", "+ str(e)+"")
+                                    timefin = time.time() - timeinit
+                                    print(timefin)
                     except Exception as e:
-                        print("Error al Obtener Articulos de noticias ", e)
+                        print("Error 3 - Obtener Articulos de noticias ", e)
         except Exception as e:
             print("Error 3 - Obtener Articulos de noticias ", e)
+
+
+
