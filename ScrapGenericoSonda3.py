@@ -12,6 +12,8 @@ import mysql.connector
 
 from celery import Celery
 CeleryClient = Celery('task_celery', broker='redis://default:d474210009@167.86.120.98:6379/0')
+
+app = Celery('task_celery', broker='redis://default:d474210009@redis:6379/0')
 from bs4 import BeautifulSoup
 mydb = mysql.connector.connect(
   host="167.86.120.98",
@@ -180,7 +182,7 @@ if __name__ == "__main__":
                                     texto = filtroReplace(Noticiae.get_text())
                                     medio = Portal["url"]
                                     fecha = date.today()
-                                    """
+
                                     try:
                                         mycursor = mydb.cursor()
                                         sql = "INSERT INTO todas_las_noticias (link,fecha,titulo,copete,texto,medio,provincia) " \
@@ -198,12 +200,12 @@ if __name__ == "__main__":
                                         CeleryClient.send_task("task_celery.InsertNoticiaMySql", [{"val": val}])
                                     except Exception as e:
                                         print("El Link ya fue guardado: " + link + ", "+ str(e)+"")
+                                    """
                                     timefin = time.time() - timeinit
                                     print(timefin)
                     except Exception as e:
                         print("Error 3 - Obtener Articulos de noticias ", e)
         except Exception as e:
             print("Error 3 - Obtener Articulos de noticias ", e)
-
 
 
