@@ -151,7 +151,6 @@ if __name__ == "__main__":
     while True:
         try:
             for Portal in Portales:
-                Portal["url"] = "https://rosarionuestro.com"
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
                 response = requests.get(Portal["url"], headers=headers).text
                 try:
@@ -176,33 +175,34 @@ if __name__ == "__main__":
                                 links = list(links)
                                 CantLinks = contarElementosLista(links)
                                 CantLinks = list(CantLinks)
-                                for link in CantLinks:
+                                if len(CantLinks) < 4:
+                                    for link in CantLinks:
 
-                                    timeinit = time.time()
-                                    texto = filtroReplace(Noticiae.get_text())
-                                    medio = Portal["url"]
-                                    fecha = date.today()
+                                        timeinit = time.time()
+                                        texto = filtroReplace(Noticiae.get_text())
+                                        medio = Portal["url"]
+                                        fecha = date.today()
 
-                                    try:
-                                        mycursor = mydb.cursor()
-                                        sql = "INSERT INTO todas_las_noticias (link,fecha,titulo,copete,texto,medio,provincia) " \
-                                              "VALUES (%s, %s, %s, %s, %s, %s, %s) "
-                                        val = (link, fecha, "", "", texto, medio, Id_Provincia)
-                                        mycursor.execute(sql, val)
-                                        mydb.commit()
-                                        print("insertó correctamente el link: " + link + "")
-                                    except Exception as e:
-                                        print("El Link ya fue guardado: " + link + "")
-                                    """
-                                    try:
-
-                                        val = (link, fecha, "", "", texto, medio, int(Id_Provincia))
-                                        CeleryClient.send_task("task_celery.InsertNoticiaMySql", [{"val": val}])
-                                    except Exception as e:
-                                        print("El Link ya fue guardado: " + link + ", "+ str(e)+"")
-                                    """
-                                    timefin = time.time() - timeinit
-                                    print(timefin)
+                                        try:
+                                            mycursor = mydb.cursor()
+                                            sql = "INSERT INTO todas_las_noticias (link,fecha,titulo,copete,texto,medio,provincia) " \
+                                                  "VALUES (%s, %s, %s, %s, %s, %s, %s) "
+                                            val = (link, fecha, "", "", texto, medio, Id_Provincia)
+                                            mycursor.execute(sql, val)
+                                            mydb.commit()
+                                            print("insertó correctamente el link: " + link + "")
+                                        except Exception as e:
+                                            print("El Link ya fue guardado: " + link + "")
+                                        """
+                                        try:
+    
+                                            val = (link, fecha, "", "", texto, medio, int(Id_Provincia))
+                                            CeleryClient.send_task("task_celery.InsertNoticiaMySql", [{"val": val}])
+                                        except Exception as e:
+                                            print("El Link ya fue guardado: " + link + ", "+ str(e)+"")
+                                        """
+                                        timefin = time.time() - timeinit
+                                        print(timefin)
                     except Exception as e:
                         print("Error 3 - Obtener Articulos de noticias ", e)
         except Exception as e:
