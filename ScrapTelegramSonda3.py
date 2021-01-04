@@ -110,15 +110,7 @@ if __name__ == '__main__':
     while True:
 
         GruposDeTelegram = requests.get("http://167.86.120.98:6061/GrupoCanal").json()
-        """
-        mycursor = mydb.cursor()
-        sql = "SELECT id_grupo FROM grupos_canal"
 
-
-        mycursor.execute(sql)
-        GruposDeTelegram = mycursor.fetchall()
-        funcionNUeva(GruposDeTelegram)
-        """
         for Grupo in GruposDeTelegram["data"]:
             if Grupo["id_grupo"] == "-436634741":
             #for Grupo in GruposDeTelegram:
