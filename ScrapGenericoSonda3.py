@@ -151,8 +151,9 @@ if __name__ == "__main__":
     while True:
         try:
             for Portal in Portales:
+                #Portal["url"] = 'https://rosarionuestro.com/'
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
-                response = requests.get(Portal["url"], headers=headers).text
+                response = requests.get("https://rosarionuestro.com/", headers=headers).text
                 try:
                     mycursor = mydb.cursor()
 
@@ -182,7 +183,7 @@ if __name__ == "__main__":
                                         texto = filtroReplace(Noticiae.get_text())
                                         medio = Portal["url"]
                                         fecha = date.today()
-
+                                        """
                                         try:
                                             mycursor = mydb.cursor()
                                             sql = "INSERT INTO todas_las_noticias (link,fecha,titulo,copete,texto,medio,provincia) " \
@@ -200,7 +201,7 @@ if __name__ == "__main__":
                                             CeleryClient.send_task("task_celery.InsertNoticiaMySql", [{"val": val}])
                                         except Exception as e:
                                             print("El Link ya fue guardado: " + link + ", "+ str(e)+"")
-                                        """
+
                                         timefin = time.time() - timeinit
                                         print(timefin)
                     except Exception as e:
