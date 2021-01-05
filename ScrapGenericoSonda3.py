@@ -149,8 +149,9 @@ if __name__ == "__main__":
     confiTagPage = {}
     confiTagPage = json.loads(j.read())
     while True:
-        try:
-            for Portal in Portales:
+
+        for Portal in Portales:
+            try:
                 #Portal["url"] = 'https://rosarionuestro.com/'
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
                 response = requests.get(Portal["url"], headers=headers).text
@@ -177,8 +178,10 @@ if __name__ == "__main__":
 
                                 CantLinks = contarElementosLista(links)
                                 CantLinks = list(CantLinks)
+
                                 if len(CantLinks) < 4:
                                     for link in CantLinks:
+                                        links = ''.join(links)
 
                                         timeinit = time.time()
                                         texto = filtroReplace(Noticiae.get_text())
@@ -207,7 +210,6 @@ if __name__ == "__main__":
                                         print(timefin)
                     except Exception as e:
                         print("Error 3 - Obtener Articulos de noticias ", e)
-        except Exception as e:
-            print("Error 3 - Obtener Articulos de noticias ", e)
-
+            except Exception as e:
+                print("Error 3 - Obtener Articulos de noticias ", e)
 
