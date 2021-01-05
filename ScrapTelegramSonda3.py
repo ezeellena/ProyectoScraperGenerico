@@ -112,29 +112,26 @@ if __name__ == '__main__':
         GruposDeTelegram = requests.get("http://167.86.120.98:6061/GrupoCanal").json()
 
         for Grupo in GruposDeTelegram["data"]:
-            if Grupo["id_grupo"] == "-436634741":
-            #for Grupo in GruposDeTelegram:
-                Provincias = []
-                Temas = []
-                resultado = []
-                #CambioGrupo = requests.get("http://167.86.120.98:6061/GrupoCanal").json()
-                ID_GRUPO = Grupo["id_grupo"]
+            Provincias = []
+            Temas = []
+            resultado = []
+            ID_GRUPO = Grupo["id_grupo"]
 
-                NombreDelGrupo = Grupo["nombre_grupo"]
-                for pronvicia in Grupo["provincias"]:
-                    Provincias.append(pronvicia["id_provincia"])
-                prov = ','.join(str(e) for e in Provincias)
-                for tema in Grupo["temas"]:
-                    sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"]+"%' and provincia in ("+ prov +") and link not in (select link from noticias_enviadas  WHERE id_grupo = '"+ID_GRUPO+"') and link not in (select link from noticias_basura)"
-                    #sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"] \
-                    # +"%' and provincia in ("+ prov +")"
-                    cursor = mydb.cursor()
-                    cursor.execute(sql_select_Query)
-                    #records = cursor.fetchall()
-                    resultado.extend(cursor.fetchall())
-                    Temas.append(tema["descripcion"])
+            NombreDelGrupo = Grupo["nombre_grupo"]
+            for pronvicia in Grupo["provincias"]:
+                Provincias.append(pronvicia["id_provincia"])
+            prov = ','.join(str(e) for e in Provincias)
+            for tema in Grupo["temas"]:
+                sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"]+"%' and provincia in ("+ prov +") and link not in (select link from noticias_enviadas  WHERE id_grupo = '"+ID_GRUPO+"' and '"+tema+"') and link not in (select link from noticias_basura)"
+                #sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"] \
+                # +"%' and provincia in ("+ prov +")"
+                cursor = mydb.cursor()
+                cursor.execute(sql_select_Query)
+                #records = cursor.fetchall()
+                resultado.extend(cursor.fetchall())
+                Temas.append(tema["descripcion"])
 
-                    enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
+                enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
 
 
 
