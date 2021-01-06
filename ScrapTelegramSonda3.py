@@ -122,14 +122,14 @@ if __name__ == '__main__':
                 Provincias.append(pronvicia["id_provincia"])
             prov = ','.join(str(e) for e in Provincias)
             for tema in Grupo["temas"]:
-                sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"]+"%' and provincia in ("+ prov +") and link not in (select link from noticias_enviadas  WHERE id_grupo = '"+ID_GRUPO+"' and '"+tema+"') and link not in (select link from noticias_basura)"
+                sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"]+"%' and provincia in ("+ prov +") and link not in (select link from noticias_enviadas  WHERE id_grupo = '"+ID_GRUPO+"' and '"+tema["descripcion"]+"') and link not in (select link from noticias_basura)"
                 #sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"] \
                 # +"%' and provincia in ("+ prov +")"
                 cursor = mydb.cursor()
                 cursor.execute(sql_select_Query)
                 #records = cursor.fetchall()
                 resultado.extend(cursor.fetchall())
-                Temas.append(tema["descripcion"])
+                Temas = tema["descripcion"]
 
                 enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
 
