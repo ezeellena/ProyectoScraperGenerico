@@ -28,7 +28,7 @@ conn = mysql.connector.connect(
 
 if __name__ == "__main__":
 
-    sql = "SELECT link FROM todas_las_noticias where link not in (select link from noticias_basura) and link not in (select link from noticias_enviadas_wordpress)"
+    sql = "SELECT link FROM todas_las_noticias where medio in (select link from portales_wordpress) and link not in (select link from noticias_basura) and link not in (select link from noticias_enviadas_wordpress)"
     mycursor = conn.cursor()
     mycursor.execute(sql)
     Portales = mycursor.fetchall()
