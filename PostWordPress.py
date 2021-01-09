@@ -50,28 +50,30 @@ if __name__ == "__main__":
                         print(e)
             except Exception as e:
                 print("Error al Obtener Articulos de noticias ", e)
+        try:
+            urllib.request.urlretrieve(imagen, "./img" + "local-filename.jpg")
+            # filename = secure_filename(f)
+            # f.save(os.path.join('./img', filename))
+            # filename = '/path/to/my/picture.jpg'
+            data = {
+                'name': 'picture.jpg',
+                'type': 'image/jpeg',  # mimetype
+            }
 
-        urllib.request.urlretrieve(imagen, "./img" + "local-filename.jpg")
-        # filename = secure_filename(f)
-        # f.save(os.path.join('./img', filename))
-        # filename = '/path/to/my/picture.jpg'
-        data = {
-            'name': 'picture.jpg',
-            'type': 'image/jpeg',  # mimetype
-        }
-
-        # read the binary file and let the XMLRPC library encode it into base64
-        with open("./img" + "local-filename.jpg", 'rb') as img:
-            data['bits'] = xmlrpc_client.Binary(img.read())
-        usuario = "Sergio"
-        contraseña = "sergio"
-        sitio = "https://somoscampoonline.com/xmlrpc.php"
-        cliente = Client(sitio, usuario, contraseña)
-        response = cliente.call(media.UploadFile(data))
-        imagenParaPublicar = response['id']
-        nueva_entrada.thumbnail = imagenParaPublicar
-        nueva_entrada.post_status = 'publish'
-
+            # read the binary file and let the XMLRPC library encode it into base64
+            with open("./img" + "local-filename.jpg", 'rb') as img:
+                data['bits'] = xmlrpc_client.Binary(img.read())
+            usuario = "Sergio"
+            contraseña = "sergio"
+            sitio = "https://somoscampoonline.com/xmlrpc.php"
+            cliente = Client(sitio, usuario, contraseña)
+            response = cliente.call(media.UploadFile(data))
+            imagenParaPublicar = response['id']
+            nueva_entrada.thumbnail = imagenParaPublicar
+            nueva_entrada.post_status = 'publish'
+        except Exception as e:
+            print("Error al Obtener Articulos de noticias ", e)
+            
         for Noti in confiTagPage["j"]["tituloNoticia"]:
             try:
                 titulo = eval(Noti)
@@ -107,12 +109,15 @@ if __name__ == "__main__":
             #'post_tag': ['AI', 'musk'],
             #'category': ['Technology', 'Chemistry']}
         id_entrada_publicada = cliente.call(posts.NewPost(nueva_entrada))
-        mycursor = conn.cursor()
-        sql = "INSERT INTO noticias_enviadas_wordpress (link, titulo, descripcion) " \
-              "VALUES (%s, %s, %s)"
-        val = (link[0], nueva_entrada.title,nueva_entrada.content)
-        mycursor.execute(sql, val)
-        conn.commit()
+        try:
+            mycursor = conn.cursor()
+            sql = "INSERT INTO noticias_enviadas_wordpress (link, titulo, descripcion,tema,campaña,nombreWordPress) " \
+                  "VALUES (%s, %s, %s, %s, %s, %s)"
+            val = (link[0], nueva_entrada.title,nueva_entrada.content,"","",usuario)
+            mycursor.execute(sql, val)
+            conn.commit()
+        except Exception as e:
+            print(e)
         print("Correcto! Se publicó la entrada, y su id es {}".format(id_entrada_publicada))
 
 
