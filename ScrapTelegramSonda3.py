@@ -1,4 +1,6 @@
 import json
+import sys
+
 from flask import Flask, request
 import requests
 import mysql.connector
@@ -82,56 +84,43 @@ def enviar_noticias(arr,id_chat,Nombre_Grupo,provincias,tema):
 
     except Exception as e:
         print(" 279 - enviar ", e)
+def corresponde_procesar_id(k, terminacion_id):
+    if k[-2:] == terminacion_id:
+        return True
+    else:
+        return False
 
-def funcionNUeva(GruposDeTelegram):
-    for Grupo in GruposDeTelegram:
-        Provincias = []
-        Temas = []
-        resultado = []
-        CambioGrupo = requests.get("http://167.86.120.98:6061/GrupoCanal").json()
-        ID_GRUPO = Grupo["id_grupo"]
-
-        NombreDelGrupo = Grupo["nombre_grupo"]
-        for pronvicia in Grupo["provincias"]:
-            Provincias.append(pronvicia["id_provincia"])
-        prov = ','.join(str(e) for e in Provincias)
-        for tema in Grupo["temas"]:
-            sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%" + tema[
-                "descripcion"] \
-                               + "%' and provincia in (" + prov + ")"
-            cursor = mydb.cursor()
-            cursor.execute(sql_select_Query)
-            # records = cursor.fetchall()
-            resultado.extend(cursor.fetchall())
-            Temas.append(tema["descripcion"])
-            if ID_GRUPO == "-436634741":
-                enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
 if __name__ == '__main__':
     while True:
-
+        terminacion_id = sys.argv[1]
         GruposDeTelegram = requests.get("http://167.86.120.98:6061/GrupoCanal").json()
+
 
         for Grupo in GruposDeTelegram["data"]:
             Provincias = []
             Temas = []
             resultado = []
-            ID_GRUPO = Grupo["id_grupo"]
+            if Grupo["id_grupo"][-2:] == terminacion_id:
+                ID_GRUPO = Grupo["id_grupo"]
 
-            NombreDelGrupo = Grupo["nombre_grupo"]
-            for pronvicia in Grupo["provincias"]:
-                Provincias.append(pronvicia["id_provincia"])
-            prov = ','.join(str(e) for e in Provincias)
-            for tema in Grupo["temas"]:
-                sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like "+'"%'+ tema["descripcion"]+'%"'+" and provincia in ("+ prov +") and link not in (select link from noticias_enviadas  WHERE id_grupo = "+'"'+ ID_GRUPO+'"'+" and tema = "+'"'+tema["descripcion"]+'"'+") and link not in (select link from noticias_basura)"
-                #sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"] \
-                # +"%' and provincia in ("+ prov +")"
-                cursor = mydb.cursor()
-                cursor.execute(sql_select_Query)
-                #records = cursor.fetchall()
-                resultado.extend(cursor.fetchall())
-                Temas = tema["descripcion"]
-
-                enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
+                NombreDelGrupo = Grupo["nombre_grupo"]
+                for pronvicia in Grupo["provincias"]:
+                    Provincias.append(pronvicia["id_provincia"])
+                prov = ','.join(str(e) for e in Provincias)
+                for tema in Grupo["temas"]:
+                    sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like " \
+                                       ""+'"%'+ tema["descripcion"]+'%"'+" and provincia in ("+ prov +") " \
+                                    "and link not in (select link from noticias_enviadas  WHERE id_grupo = "+'"'+ ID_GRUPO+'"'+" " \
+                                    "and tema = "+'"'+tema["descripcion"]+'"'+") and link not in (select link from noticias_basura)"
+                    #sql_select_Query = "SELECT link, medio, texto FROM todas_las_noticias WHERE texto like '%"+ tema["descripcion"] \
+                    # +"%' and provincia in ("+ prov +")"
+                    cursor = mydb.cursor()
+                    cursor.execute(sql_select_Query)
+                    #records = cursor.fetchall()
+                    resultado.extend(cursor.fetchall())
+                    Temas = tema["descripcion"]
+                    if not resultado == []:
+                        enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
 
 
 
