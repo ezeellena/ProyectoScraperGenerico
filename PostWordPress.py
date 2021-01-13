@@ -11,7 +11,6 @@ import mysql.connector
 from bs4 import BeautifulSoup
 from tldextract import tldextract
 import urllib.request
-import pyodbc
 """
 conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};'
                       'Server=localhost;'
