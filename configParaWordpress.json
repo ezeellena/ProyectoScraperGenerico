@@ -1,0 +1,20 @@
+{
+  "j": {
+    "tituloNoticia": [
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"name\":\"twitter:title\"})[\"content\"]",
+      "json.loads(BeautifulSoup(response2, \"html.parser\").find(\"script\", {\"type\": 'application/ld+json'}).string)[0][\"headline\"]",
+      "json.loads(BeautifulSoup(response2, \"html.parser\").find(\"script\", {\"type\": 'application/ld+json'}).string)[\"headline\"]",
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"property\":\"og:title\"})[\"content\"]"
+    ],
+    "descripcionNoticia": [
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"name\":\"twitter:description\"})[\"content\"]",
+      "json.loads(BeautifulSoup(response2, \"html.parser\").find(\"script\", {\"type\": 'application/ld+json'}).string)[0][\"description\"]",
+      "json.loads(BeautifulSoup(response2, \"html.parser\").find(\"script\", {\"type\": 'application/ld+json'}).string)[\"description\"]",
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"property\":\"og:description\"})[\"content\"]"
+    ],
+    "imagenNoticia": [
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"name\":\"twitter:image\"})[\"content\"]",
+      "BeautifulSoup(response2, \"html.parser\").find(\"meta\", {\"property\":\"og:image\"})[\"content\"]"
+    ]
+  }
+}
