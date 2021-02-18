@@ -78,29 +78,49 @@ if __name__ == "__main__":
                     except Exception as e:
                         print("Error al Obtener el response ", e)
                     nueva_entrada = WordPressPost()
+                    for Noti in confiTagPage["j"]["imagenNoticia"]:
+                        try:
+                            imagen = eval(Noti)
+                            if imagen != []:
+                                try:
+                                    nueva_entrada.thumbnail = imagen
+                                except Exception as e:
+                                    print(e)
+                        except Exception as e:
+                            print("Error al Obtener imagen ", e)
                     try:
-                        for Noti in confiTagPage["j"]["imagenNoticia"]:
-
-                                imagen = eval(Noti)
-                                if imagen != []:
-                                    try:
-                                        nueva_entrada.thumbnail = imagen
-                                    except Exception as e:
-                                        print(e)
-                    except Exception as e:
-                        print("Error al Obtener imagen ", e)
-                    try:
+                        fileImg = urllib.request.urlopen(nueva_entrada.thumbnail)
+                        imageName = fileImg.url.split('/')[-1] + '.jpg'
+                        data = {
+                            'name': imageName,
+                            'type': 'image/jpeg',
+                        }
+                        data['bits'] = xmlrpc_client.Binary(fileImg.read())
+                        """
+                        if ".jpg" in nueva_entrada.thumbnail:
+                            url_imagen = nueva_entrada.thumbnail  # El link de la imagen
+                            nombre_local_imagen = "go.jpg"  # El nombre con el que queremos guardarla
+                            imagen = requests.get(url_imagen).content
+                            with open(nombre_local_imagen, 'wb') as handler:
+                                handler.write(imagen)
+                        elif ".png" in nueva_entrada.thumbnail:
+                            url_imagen = nueva_entrada.thumbnail  # El link de la imagen
+                            nombre_local_imagen = "go.png"  # El nombre con el que queremos guardarla
+                            imagen = requests.get(url_imagen).content
+                            with open(nombre_local_imagen, 'wb') as handler:
+                                handler.write(imagen)
 
                         path = os.getcwd()+"\\00000001.jpg"
                         f = open(path, 'wb')
-                        f.write(urllib.request.urlopen(nueva_entrada.thumbnail ).read())
+                        f.write(urllib.request.urlopen(nueva_entrada.thumbnail).read())
                         f.close()
 
                         filename = path
                         data = {'name': 'picture.jpg', 'type': 'image/jpg', }
+
                         with open(filename, 'rb') as img:
                             data['bits'] = xmlrpc_client.Binary(img.read())
-
+                        """
                         sql = "SElECT cw.usuario,cw.contraseña, cw.link FROM cuentas_wordpress as cw inner join publicador as p" \
                               " on cw.portal = p.url where p.id_padre =" + str(publiAgrupado[0]) + " group by 1,2,3"
                         mycursor = conn.cursor()
@@ -115,9 +135,8 @@ if __name__ == "__main__":
                         nueva_entrada.thumbnail = imagenParaPublicar
                         nueva_entrada.post_status = 'publish'
 
-                        try:
-                            for Noti in confiTagPage["j"]["tituloNoticia"]:
-
+                        for Noti in confiTagPage["j"]["tituloNoticia"]:
+                            try:
                                 titulo = eval(Noti)
                                 if titulo != []:
                                     try:
@@ -125,12 +144,11 @@ if __name__ == "__main__":
                                             nueva_entrada.title = titulo
                                     except Exception as e:
                                         print(e)
-                        except Exception as e:
-                            print("Error al Obtener titulo noticia ", e)
+                            except Exception as e:
+                                print("Error al Obtener titulo noticia ", e)
 
-                        try:
-                            for Noti in confiTagPage["j"]["descripcionNoticia"]:
-
+                        for Noti in confiTagPage["j"]["descripcionNoticia"]:
+                            try:
                                 descripcion = eval(Noti)
                                 if descripcion != []:
                                     try:
@@ -140,11 +158,12 @@ if __name__ == "__main__":
                                             nueva_entrada.content = "Fuente: " + link[0] + ""
                                     except Exception as e:
                                         print(e)
-                        except Exception as e:
-                            print("Error al Obtener descripcion ", e)
+                            except Exception as e:
+                                print("Error al Obtener descripcion ", e)
+
+                        if not nueva_entrada.content or not nueva_entrada.title or not nueva_entrada.thumbnail:
+                            break
                         try:
-                            if not nueva_entrada.content or not nueva_entrada.title or not nueva_entrada.thumbnail:
-                                break
                             # nueva_entrada.title = titulo
                             # nueva_entrada.content = texto
                             # nueva_entrada.terms_names = {
