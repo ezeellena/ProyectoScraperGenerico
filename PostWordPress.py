@@ -1,8 +1,11 @@
 import os
-
+import ssl
+import string
+from urllib.parse import quote, quote_plus, urlencode
 import requests
+import urllib3
 from werkzeug.utils import secure_filename
-from wordpress_xmlrpc import Client, WordPressPost, xmlrpc_client
+from wordpress_xmlrpc import Client, WordPressPost, xmlrpc_client, wordpress
 from wordpress_xmlrpc.methods import posts, media
 import json
 from flask import Flask, request
@@ -78,6 +81,7 @@ if __name__ == "__main__":
                     except Exception as e:
                         print("Error al Obtener el response ", e)
                     nueva_entrada = WordPressPost()
+
                     for Noti in confiTagPage["j"]["imagenNoticia"]:
                         try:
                             imagen = eval(Noti)
@@ -89,12 +93,18 @@ if __name__ == "__main__":
                         except Exception as e:
                             print("Error al Obtener imagen ", e)
                     try:
-                        fileImg = urllib.request.urlopen(nueva_entrada.thumbnail)
+                        user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
+                        headers = {'User-Agent': user_agent, }
+                        url = urllib.parse.quote(nueva_entrada.thumbnail, safe=string.printable)
+                        fileImg = urllib.request.urlopen(url)
+                        #req = urllib.request.Request(url=nueva_entrada.thumbnail , headers=headers)
+                        #fileImg = urllib.request.urlopen(urlencode({'url': req}))
                         imageName = fileImg.url.split('/')[-1] + '.jpg'
                         data = {
                             'name': imageName,
                             'type': 'image/jpeg',
                         }
+
                         data['bits'] = xmlrpc_client.Binary(fileImg.read())
                         """
                         if ".jpg" in nueva_entrada.thumbnail:
@@ -166,9 +176,9 @@ if __name__ == "__main__":
                         try:
                             # nueva_entrada.title = titulo
                             # nueva_entrada.content = texto
-                            # nueva_entrada.terms_names = {
-                            # 'post_tag': ['AI', 'musk'],
-                            # 'category': ['Technology', 'Chemistry']}
+                            nueva_entrada.terms_names = {
+                            'post_tag': ['AI', 'musk'],
+                            'category': ['Technology', 'Chemistry']}
                             id_entrada_publicada = cliente.call(posts.NewPost(nueva_entrada))
                         except Exception as e:
                             print("Error consulta", e)
