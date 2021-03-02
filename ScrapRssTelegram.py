@@ -1,4 +1,6 @@
 import sys
+from datetime import time
+
 import requests
 import mysql.connector
 from tldextract import tldextract
@@ -45,11 +47,12 @@ def enviar_noticias(resultado,id_chat,Nombre_Grupo,provincias,tema):
         print(" 279 - enviar ", e)
 
 if __name__ == '__main__':
-    while True:
-        terminacion_id = sys.argv[1]
-        GruposDeTelegram = requests.get("http://stg.kernelinformatica.com.ar:6060/GrupoCanal").json()
 
+    while True:
         try:
+            terminacion_id = sys.argv[1]
+            GruposDeTelegram = requests.get("http://stg.kernelinformatica.com.ar:6060/GrupoCanal").json()
+
             for Grupo in GruposDeTelegram["data"]:
                 Provincias = []
                 Temas = []
@@ -81,3 +84,6 @@ if __name__ == '__main__':
                             enviar_noticias(resultado, ID_GRUPO, NombreDelGrupo, prov, Temas)
         except Exception as e:
             print("error: " + str(e))
+            time.sleep(2)
+            continue
+
