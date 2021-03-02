@@ -65,10 +65,21 @@ if __name__ == "__main__":
                                     print("insertó correctamente el link: " + link + "")
                                 except Exception as e:
                                     print("El Link ya fue guardado: " + link + "" + str(e.msg) + "")
+
                     except Exception as e:
-                        print("error en  "+ str(e) + "  "+  Portal["url_rss"])
+                        print("error en feed " + str(e))
+                        f = open('log.txt', 'w')
+                        f.write('error en feed  - %s' % e)
+                        f.close()
+                        continue
             except Exception as e:
                 print("error en  2do try" + str(e))
+                f = open('log.txt', 'w')
+                f.write('error en  2do try - %s' % e)
+                f.close()
                 continue
     except Exception as e:
         print("error en  1er try" + str(e))
+        f = open('log.txt', 'w')
+        f.write('error en  1er try - %s' % e)
+        f.close()
