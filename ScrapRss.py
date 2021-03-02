@@ -49,7 +49,10 @@ if __name__ == "__main__":
                             for item in feed["items"]:
                                 link = item["link"]
                                 titulo = item["title"]
-                                pubDate = item["published"]
+                                try:
+                                    pubDate = item["published"]
+                                except Exception as e:
+                                    pubDate = item["updated"]
                                 description = limpiar(re.sub("<.*?>", "", item["summary"]),mugre)
                                 try:
                                     content = limpiar(re.sub("<.*?>", "", item["content"][0].value),mugre)
