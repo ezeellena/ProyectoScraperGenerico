@@ -30,37 +30,45 @@ def limpiar(texto, mugre):
         texto = texto.replace(m,"")
     return texto
 if __name__ == "__main__":
-    while True:
-        if len(sys.argv) > 1:
-            Id_Provincia = sys.argv[1]
-        #else:
-            #Id_Provincia = "5"
-        Portales = requests.get("http://stg.kernelinformatica.com.ar:6060/Portales?id_provincia=" + Id_Provincia + "").json()
-
-        for Portal in Portales:
+    try:
+        while True:
             try:
-                #Portal["url"] = 'https://rosarionuestro.com/'
-                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
-                feed = feedparser.parse(Portal["url_rss"])
-                if feed:
-                    for item in feed["items"]:
-                        link = item["link"]
-                        titulo = item["title"]
-                        pubDate = item["published"]
-                        description = limpiar(re.sub("<.*?>", "", item["summary"]),mugre)
-                        try:
-                            content = limpiar(re.sub("<.*?>", "", item["content"][0].value),mugre)
-                        except Exception as e:
-                            content = "No Contiene"
-                        try:
-                            mycursor = mydb.cursor()
-                            sql = "INSERT INTO todas_las_noticias_rss (link,titulo,pubDate,description,content,id_provincia) " \
-                                  "VALUES (%s, %s, %s, %s, %s, %s) "
-                            val = (link, titulo, pubDate, description, content,Id_Provincia)
-                            mycursor.execute(sql, val)
-                            mydb.commit()
-                            print("insertó correctamente el link: " + link + "")
-                        except Exception as e:
-                            print("El Link ya fue guardado: " + link + "" + str(e.msg) + "")
+                if len(sys.argv) > 1:
+                    Id_Provincia = sys.argv[1]
+                #else:
+                    #Id_Provincia = "false"
+                Portales = requests.get("http://stg.kernelinformatica.com.ar:6060/Portales?id_provincia=" + Id_Provincia + "").json()
+                #Portales = requests.get("http://stg.kernelinformatica.com.ar:6060/Portales?id_provincia=" + Id_Provincia + "").json()
+
+                for Portal in Portales:
+                    try:
+                        #Portal["url"] = 'https://rosarionuestro.com/'
+                        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',}
+                        feed = feedparser.parse(Portal["url_rss"])
+                        if feed:
+                            for item in feed["items"]:
+                                link = item["link"]
+                                titulo = item["title"]
+                                pubDate = item["published"]
+                                description = limpiar(re.sub("<.*?>", "", item["summary"]),mugre)
+                                try:
+                                    content = limpiar(re.sub("<.*?>", "", item["content"][0].value),mugre)
+                                except Exception as e:
+                                    content = "No Contiene"
+                                try:
+                                    mycursor = mydb.cursor()
+                                    sql = "INSERT INTO todas_las_noticias_rss (link,titulo,pubDate,description,content,id_provincia) " \
+                                          "VALUES (%s, %s, %s, %s, %s, %s) "
+                                    val = (link, titulo, pubDate, description, content,Id_Provincia)
+                                    mycursor.execute(sql, val)
+                                    mydb.commit()
+                                    print("insertó correctamente el link: " + link + "")
+                                except Exception as e:
+                                    print("El Link ya fue guardado: " + link + "" + str(e.msg) + "")
+                    except Exception as e:
+                        print("error en  "+ str(e) + "  "+  Portal["url_rss"])
             except Exception as e:
-                print("error en  "+ str(e) + "  "+  Portal["url_rss"])
+                print("error en  2do try" + str(e))
+                continue
+    except Exception as e:
+        print("error en  1er try" + str(e))
